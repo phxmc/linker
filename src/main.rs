@@ -1,8 +1,8 @@
 mod link;
 mod reference;
 
-use axum::extract::{Path, Query};
 use tokio::net::TcpListener;
+use axum::extract::{Path, Query};
 use axum::Router;
 use axum::body::Body;
 use axum::http::header::LOCATION;
