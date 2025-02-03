@@ -3,25 +3,21 @@ on:
     types: [published]
 jobs:
   build-and-release:
+    name: Build and release
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install Rust toolchain
-        run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
-          rust target add x86_64-unknown-linux-gnu
-      - name: Build project for x86_64-unknown-linux-gnu
-        run: cargo build --release --target=x86_64-unknown-linux-gnu
+      - uses: actions/checkout@v4
+      - run: rustup update
+      - run: cargo build --release
       - name: Archive binaries
-        run: tar -czar binaries.tar.gz target/x86_64-unknown-linux-gnu/release/
+        run: tar -czar linux-binaries.tar.gz target/release/
       - name: Upload binaries to release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./binaries.tar.gz
-          asset_name: binaries-x86_64-unknown-linux-gnu.tar.gz
+          asset_path: ./linux-binaries.tar.gz
+          asset_name: linux-binaries.tar.gz
           asset_content_type: application/gzip
