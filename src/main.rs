@@ -3,20 +3,23 @@ mod reference;
 
 use tokio::net::TcpListener;
 use axum::extract::{Path, Query};
-use axum::Router;
+use axum::{Json, Router};
 use axum::body::Body;
 use axum::http::header::LOCATION;
 use axum::routing::get;
 use axum::http::StatusCode;
 use axum::response::{Response, IntoResponse};
 use serde::Deserialize;
+use crate::link::entity::Link;
 use crate::reference::entity::Reference;
 use crate::reference::storage;
+use crate::link::parser;
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
-        .route("/{id}", get(link));
+        .route("/{id}", get(link))
+        .route("/links", get(links));
 
     let addr = "0.0.0.0:8049";
 
@@ -31,9 +34,18 @@ struct Params {
     reference: String,
 }
 
+async fn links() -> Json<Vec<Link>> {
+    let links = parser::parse_links();
+
+    match links {
+        Ok(links) => Json(links),
+        Err(_) => Json(vec![])
+    }
+}
+
 async fn link(Path(path): Path<String>, Query(params): Query<Params>) -> Response {
     let id = path.strip_suffix("/").unwrap_or(&path);
-    let link = link::parser::parse(id.to_string());
+    let link = parser::parse_by_id(&id.to_string());
 
     if params.reference == "" {
         println!("/{path}")
